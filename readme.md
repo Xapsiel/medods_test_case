@@ -6,7 +6,7 @@
 ## Установка (docker compose)
 1. Клонирование репозитория
 
-```git clone https://github.com/Xapsiel/Test_Case_EM.git```
+```git clone https://github.com/Xapsiel/medods_test_case.git```
 
 2. Переходим в директорию репозитория.
 
