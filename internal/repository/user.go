@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"medods/internal/models"
 )
@@ -18,21 +19,23 @@ func (u *UserPostgres) Refresh(tokens models.Tokens) (models.Tokens, error) {
 
 }
 func (u *UserPostgres) SetRefreshToken(token models.RefreshToken) error {
-	query := `INSERT INTO users(id, refresh_token, exp,ip) 
-				VALUES ($1,$2,$3,$4)
-				ON CONFLICT 
-				DO UPDATE SET refresh_token = $5, exp = $6, ip = $7;
+	query := `INSERT INTO users(id, refresh_token, exp,ip,email) 
+				VALUES ($1,$2,$3,$4,$5)
+				ON CONFLICT (id)
+				DO UPDATE SET refresh_token = $6, exp = $7, ip = $8,email = $9;
  			`
-	_, err := u.db.Exec(query, token.ID, token.Refresh_token, token.Exp, token.Ip, token.Refresh_token, token.Refresh_token, token.Ip)
+	_, err := u.db.Exec(query, token.ID, token.Refresh_token, token.Exp, token.Ip, token.Email, token.Refresh_token, token.Exp, token.Ip, token.Email)
 	return err
 }
-func (u *UserPostgres) GetRefreshToken(id int) (models.RefreshToken, error) {
-	token := models.RefreshToken{}
-	query := `SELECT refresh_token, exp,ip FROM users WHERE id = '$1'`
-	err := u.db.Select(&token, query, id)
+func (u *UserPostgres) GetRefreshToken(email string) (models.RefreshToken, error) {
+	token := []models.RefreshToken{}
+	query := `SELECT * FROM users WHERE email = $1`
+	err := u.db.Select(&token, query, email)
 	if err != nil {
-		return token, err
+		return models.RefreshToken{}, err
+	} else if len(token) == 0 {
+		return models.RefreshToken{}, fmt.Errorf("Токен не найден")
 	}
-	return token, nil
+	return token[0], nil
 
 }

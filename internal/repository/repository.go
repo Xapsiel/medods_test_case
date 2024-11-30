@@ -8,7 +8,7 @@ import (
 type User interface {
 	Refresh(tokens models.Tokens) (models.Tokens, error)
 	SetRefreshToken(token models.RefreshToken) error
-	GetRefreshToken(id int) (models.RefreshToken, error)
+	GetRefreshToken(email string) (models.RefreshToken, error)
 }
 type Repository struct {
 	User

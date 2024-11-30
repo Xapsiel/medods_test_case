@@ -1,9 +1,12 @@
 package service
 
 import (
+	"fmt"
+	"log"
 	"medods/internal/models"
 	"medods/internal/repository"
 	"medods/pkg/utils"
+	"time"
 )
 
 type UserService struct {
@@ -21,11 +24,9 @@ func (u *UserService) GetAccessToken(id int, ip string) (string, error) {
 	}
 	return token, nil
 }
-func (u *UserService) GetRefreshToken(id int, ip string) (string, error) {
-	token, time, err := utils.GenerateToken(id, ip)
-	if err != nil {
-		return "", err
-	}
+func (u *UserService) GetRefreshToken(id int, ip string, email string) (string, error) {
+	token := utils.GenerateRefreshToken()
+	exp := time.Now().Add(time.Hour * 24 * 30).Unix()
 	hashToken, err := utils.HashToken(token)
 	if err != nil {
 		return "", err
@@ -34,7 +35,8 @@ func (u *UserService) GetRefreshToken(id int, ip string) (string, error) {
 		ID:            id,
 		Refresh_token: hashToken,
 		Ip:            ip,
-		Exp:           time,
+		Exp:           exp,
+		Email:         email,
 	}
 	err = u.repo.SetRefreshToken(refreshToken)
 	if err != nil {
@@ -43,14 +45,36 @@ func (u *UserService) GetRefreshToken(id int, ip string) (string, error) {
 	return token, nil
 }
 
-func (u *UserService) Refresh(tokens models.Tokens) (models.Tokens, error) {
-	access := tokens.AccessToken
-	refresh := tokens.RefreshToken
-	a_user_id, a_ip, err := utils.ExtractPayload(access)
+func (u *UserService) Refresh(token string, ip string, email string) (models.Tokens, error) {
+
+	refreshToken, err := u.repo.GetRefreshToken(email)
 	if err != nil {
 		return models.Tokens{}, err
 	}
-	r_user_id, r_ip, err := utils.ExtractPayload(refresh)
+	if !utils.CompareHash(token, refreshToken.Refresh_token) {
+		return models.Tokens{}, fmt.Errorf("Неправильный refresh токен")
+	} else if refreshToken.Exp < time.Now().Unix() {
+		return models.Tokens{}, fmt.Errorf("Срок действия токена истек")
+	}
+	if refreshToken.Ip == ip {
+		SendEmail(email)
+		return models.Tokens{}, fmt.Errorf("Странный ip-адрес")
+	}
+	access, err := u.GetAccessToken(refreshToken.ID, ip)
+	if err != nil {
+		return models.Tokens{}, err
+	}
+	refresh, err := u.GetRefreshToken(refreshToken.ID, ip, email)
+	if err != nil {
+		return models.Tokens{}, err
+	}
+	return models.Tokens{
+		AccessToken:  access,
+		RefreshToken: refresh,
+		Email:        email,
+	}, nil
+}
 
-	return u.repo.Refresh(tokens)
+func SendEmail(email string) {
+	log.Printf("ip-адреса пользователя %s не совпадают", email)
 }

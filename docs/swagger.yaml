@@ -1,0 +1,87 @@
+definitions:
+  handler.errorResponse:
+    properties:
+      message:
+        example: error description
+        type: string
+      status:
+        example: fail
+        type: string
+    type: object
+  models.Tokens:
+    properties:
+      access_token:
+        type: string
+      email:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/getTokens:
+    get:
+      consumes:
+      - application/json
+      description: Обновление access токена
+      parameters:
+      - default: "1"
+        description: ID пользователя
+        in: query
+        name: id
+        type: string
+      - default: DefaultEmail@mail.ru
+        description: email пользователя
+        in: query
+        name: email
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Tokens'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Получение access и refresh токена
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh the access and refresh tokens
+      parameters:
+      - description: Рефреш токен и email
+        in: body
+        name: token
+        required: true
+        schema:
+          $ref: '#/definitions/models.Tokens'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Tokens'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Refresh Tokens
+      tags:
+      - auth
+swagger: "2.0"

@@ -1,8 +1,7 @@
-package cmd
+package main
 
 import (
 	"github.com/joho/godotenv"
-	"github.com/spf13/viper"
 	"log"
 	"medods/internal/handler"
 	"medods/internal/models"
@@ -12,19 +11,16 @@ import (
 )
 
 func main() {
-	if err := initConfig(); err != nil {
-		log.Println(err.Error())
-	}
 	if err := godotenv.Load(); err != nil {
 		log.Println(err.Error())
 	}
 	db, err := repository.NewPostgresDB(repository.Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
+		Username: os.Getenv("DB_USER"),
 		Password: os.Getenv("DB_PASSWORD"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
+		DBName:   os.Getenv("DB_NAME"),
+		SSLMode:  os.Getenv("DB_SSLMODE"),
 	})
 	if err != nil {
 		log.Println(err.Error())
@@ -33,12 +29,7 @@ func main() {
 	services := service.NewService(repos)
 	handlers := handler.NewHandler(services)
 	srv := new(models.Server)
-	if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
+	if err := srv.Run(os.Getenv("HOST_PORT"), handlers.InitRoutes()); err != nil {
 		log.Fatalln(err)
 	}
-}
-func initConfig() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
 }

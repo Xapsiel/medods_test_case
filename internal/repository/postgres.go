@@ -11,7 +11,6 @@ import (
 
 const (
 	songTable = "song"
-	DB_NAME   = "library"
 )
 
 type Config struct {
@@ -30,7 +29,7 @@ func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Ошибка подключения к базе данных postgres")
 	}
-	_, err = initialDB.Exec(fmt.Sprintf("CREATE DATABASE %s", DB_NAME))
+	_, err = initialDB.Exec(fmt.Sprintf("CREATE DATABASE %s", cfg.DBName))
 	if err != nil {
 		err = nil
 	}
@@ -40,7 +39,7 @@ func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
 	mainConnStr := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password='%s' sslmode=%s", cfg.Host, cfg.Port, cfg.Username, cfg.DBName, cfg.Password, cfg.SSLMode)
 	db, err := sqlx.Open("postgres", mainConnStr)
 	if err != nil {
-		return nil, fmt.Errorf("Ошибка подключения к базе данных %s", DB_NAME)
+		return nil, fmt.Errorf("Ошибка подключения к базе данных %s", cfg.DBName)
 	}
 	if err = db.Ping(); err != nil {
 		return nil, fmt.Errorf("Ошибка пингования базы данных")

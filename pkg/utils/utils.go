@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"os"
 	"time"
@@ -30,12 +31,31 @@ func GenerateToken(userID int, ip string) (string, int64, error) {
 	}
 	return signedAccessToken, time, err
 }
-func GenerateRefreshToken(userID int, ip string) (string, error) {
-	return
+
+//	func GenerateRefreshToken(userID int, ip string) (string, int64, error) {
+//		time := time.Now().Add(time.Hour * 32).Unix()
+//		Token_id := uuid.New().String()
+//		token := jwt.NewWithClaims(jwt.SigningMethodHS2, tokenClaims{
+//			jwt.StandardClaims{
+//				ExpiresAt: time,
+//			},
+//			userID,
+//			ip,
+//			Token_id,
+//		})
+//
+//		signedAccessToken, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+//		if err != nil {
+//			return "", 0, err
+//		}
+//		return signedAccessToken, time, err
+//	}
+func GenerateRefreshToken() string {
+	return uuid.New().String() + uuid.New().String()
 }
 
 func HashToken(token string) (string, error) {
-	hashToken, err := bcrypt.GenerateFromPassword([]byte(token), 10)
+	hashToken, err := bcrypt.GenerateFromPassword([]byte(token), 0)
 	if err != nil {
 		return "", err
 	}
@@ -48,7 +68,7 @@ func CompareHash(token, hashToken string) bool {
 }
 
 func ExtractPayload(token string) (int, string, error) {
-	token = token[len("Bearer "):]
+	//token = token[len("Bearer "):]
 	newToken, err := jwt.ParseWithClaims(token, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method")
